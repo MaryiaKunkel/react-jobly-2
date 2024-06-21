@@ -7,15 +7,15 @@ import JoblyApi from "./api.js";
 function Job({ jobs }) {
   const { handle } = useParams();
   const currentUser = useContext(UserContext);
-  const [appliedJobs, setAppliedJobs] = useState([new Set()]);
+  const [appliedJobs, setAppliedJobs] = useState(new Set());
   console.log("currentUser:", currentUser.user);
 
   useEffect(() => {
     async function getUserApplication() {
-      if (currentUser.applications) {
+      if (currentUser) {
         const user = await JoblyApi.getUser(currentUser.user.username);
-        console.log(user.user.applications);
-        setAppliedJobs(new Set(user.applications.map((app) => app.jobId)));
+        console.log("Applications: ", user.user.applications);
+        setAppliedJobs(new Set(user.user.applications.map((app) => app.jobId)));
       }
     }
     getUserApplication();
@@ -25,8 +25,13 @@ function Job({ jobs }) {
     console.log(currentUser.user.username);
     console.log(jobId);
     try {
+      const result = await JoblyApi.applyForJob(
+        currentUser.user.username,
+        jobId
+      );
+      console.log(result);
       setAppliedJobs((prevAppliedJobs) => new Set(prevAppliedJobs).add(jobId));
-      await JoblyApi.applyForJob(currentUser.user.username, jobId, currentUser);
+      console.log("Applications: ", currentUser.user.applications);
     } catch (err) {
       console.error("Error applying for job:", err);
     }
@@ -49,7 +54,7 @@ function Job({ jobs }) {
                   onClick={() => applyForJob(job.id)}
                   disabled={appliedJobs.has(job.id)}
                 >
-                  Apply
+                  {appliedJobs.has(job.id) ? "Applied" : "Apply"}
                 </Button>
               </ListGroupItem>
             ))}
